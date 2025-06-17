@@ -18,7 +18,7 @@ const Home = () => {
           <button className="btn btn-danger px-4 mt-3">Periksa Sekarang</button>
         </div>
         <div className="col-md-6 text-center">
-          <img src="/images/home1.png" alt="Ibu Hamil" className="img-fluid w-100" style={{ maxHeight: "600px" }} />
+          <img src="/images/home1.png" alt="Ibu Hamil" className="img-fluid w-200" style={{ maxHeight: "600px" }} />
         </div>
 
         <section className="diagnosa-step mb-5 py-5">

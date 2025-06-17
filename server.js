@@ -1,4 +1,4 @@
-// server.js (Versi Final dengan Hardcoded Rules, CF, dan Semua Endpoint Lengkap)
+// server.js (Versi Final dengan Hardcoded Rules, CF, dan Semua Endpoint)
 
 import express from "express";
 import mysql from "mysql2/promise";
@@ -171,11 +171,7 @@ const aturanPakarCF = {
   },
 };
 
-// =================================================================
-// --- ENDPOINT API ---
-// =================================================================
-
-// Endpoint untuk mengambil data trimester
+// ENDPOINT API
 app.get("/api/trimester", async (req, res) => {
   try {
     const [rows] = await dbPool.query("SELECT kode_trimester, keterangan FROM trimester ORDER BY kode_trimester");
@@ -201,7 +197,6 @@ app.get("/api/trimester", async (req, res) => {
   }
 });
 
-// Endpoint untuk mengambil GEJALA berdasarkan Trimester
 app.get("/api/gejala/:kodeTrimester", async (req, res) => {
   const { kodeTrimester } = req.params;
   const gejalaCodes = new Set();
@@ -224,7 +219,6 @@ app.get("/api/gejala/:kodeTrimester", async (req, res) => {
   }
 });
 
-// Endpoint Diagnosis dengan Logika Baru (FC + CF Bertingkat)
 app.post("/api/diagnosis", async (req, res) => {
   const { identitas, usiaKehamilan, gejala: gejalaPasien } = req.body;
   if (!identitas || !usiaKehamilan || !gejalaPasien || gejalaPasien.length === 0) {
@@ -263,14 +257,18 @@ app.post("/api/diagnosis", async (req, res) => {
       const rule = aturanPakarCF[ruleId];
       if (!rule.trimester.includes(usiaKehamilan)) continue;
       let cfKombinasi = 0;
-      rule.gejala.forEach((gejalaAturan) => {
-        if (gejalaPasien.includes(gejalaAturan.kode)) {
-          cfKombinasi = cfKombinasi + gejalaAturan.cf * (1 - cfKombinasi);
+      const gejalaCocok = rule.gejala.filter((g) => gejalaPasien.includes(g.kode));
+      if (gejalaCocok.length > 0) {
+        cfKombinasi = gejalaCocok[0].cf;
+        for (let i = 1; i < gejalaCocok.length; i++) {
+          const cfBerikutnya = gejalaCocok[i].cf;
+          cfKombinasi = cfKombinasi + cfBerikutnya * (1 - cfKombinasi);
         }
-      });
+      }
       if (cfKombinasi > 0) {
-        if (!cfScores[rule.kodePenyakit] || cfKombinasi > cfScores[rule.kodePenyakit]) {
-          cfScores[rule.kodePenyakit] = cfKombinasi;
+        const kodePenyakit = rule.kodePenyakit;
+        if (!cfScores[kodePenyakit] || cfKombinasi > cfScores[kodePenyakit]) {
+          cfScores[kodePenyakit] = cfKombinasi;
         }
       }
     }
@@ -297,9 +295,8 @@ app.post("/api/diagnosis", async (req, res) => {
       }
       await connection.commit();
       return res.json({
-        kode_penyakit: hasilPenyakit.kode_penyakit,
+        ...hasilPenyakit,
         nama_penyakit: deskripsiKeyakinan,
-        solusi: hasilPenyakit.solusi,
         keyakinan: Math.round(skorTertinggi * 100),
       });
     } else {
@@ -307,7 +304,7 @@ app.post("/api/diagnosis", async (req, res) => {
       res.json({
         kode_penyakit: null,
         nama_penyakit: "Tidak Ada Penyakit yang Terdiagnosis",
-        solusi: "Penyakit dengan keyakinan < 60% tidak ditampilkan karena kurang meyakinkan. Sangat disarankan untuk segera berkonsultasi dengan dokter atau bidan.",
+        solusi: "Berdasarkan gejala yang Anda pilih, sistem tidak dapat menentukan penyakit dengan keyakinan di atas 60%. Sangat disarankan untuk segera berkonsultasi dengan dokter atau bidan.",
         keyakinan: Math.round(skorTertinggi * 100),
       });
     }
