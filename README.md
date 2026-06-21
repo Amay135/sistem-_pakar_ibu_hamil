@@ -1,4 +1,4 @@
-# 🤰 Sistem Pakar Ibu Hamil
+# Sistem Pakar Ibu Hamil
 
 Sistem Pakar Ibu Hamil adalah sebuah aplikasi berbasis sistem pakar yang dirancang untuk membantu ibu hamil dalam mendeteksi potensi risiko kehamilan, mendiagnosis keluhan umum, serta memberikan saran dan rekomendasi penanganan awal berdasarkan basis pengetahuan medis (knowledge base).
 
